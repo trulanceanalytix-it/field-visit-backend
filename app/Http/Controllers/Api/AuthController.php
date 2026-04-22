@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Employee;
+use App\Models\EmployeeBeatOutletMap;
+use Carbon\Carbon;
+use Illuminate\Auth\EloquentUserProvider;
+
+class AuthController extends Controller
+{
+    public function employeeName($emp_id)
+    {
+        return response()->json([
+            'name' => Employee::where('emp_id', $emp_id)->value('emp_name')
+        ]);
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|digits:5',
+            'password' => 'required'
+        ]);
+
+        if (!Auth::attempt([
+            'emp_id' => $request->user_id,
+            'password' => $request->password,
+        ])) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
+
+        $user = Employee::where('emp_id', $request->user_id)->first();
+        $hasDirectBeats = EmployeeBeatOutletMap::where('employee_id', $user->emp_id)->exists();
+
+        // revoke old tokens
+        // $user->tokens()->delete();
+        $reportingTo = trim(sprintf(
+            '%s - %s_%s_%s',
+            $user->mgr_level,
+            $user->reporting_mgr_name,
+            $user->reporting_mgr_id,
+            $user->mgr_designation
+        ));
+
+        // ✅ Create token
+        $token = $user->createToken('five-mobile');
+        // ✅ Set expiry to today 11:00 PM
+        $token->accessToken->expires_at = Carbon::today()->setTime(23, 0, 0);
+        $token->accessToken->save();
+        return response()->json([
+            'status' => true,
+            'message' => 'Login success',
+            'token' => $token->plainTextToken,
+            'user' => [
+                'emp_id' => $user->emp_id,
+                'emp_name' => $user->emp_name,
+                'reporting_to' => $reportingTo,
+                'is_admin' => $user->is_admin,
+                'has_direct_beats' => $hasDirectBeats,  // ✅ ADD THIS
+            ]
+        ]);
+    }
+}
