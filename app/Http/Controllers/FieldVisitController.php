@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use TCPDF;
 use app\Http\Controllers\EmployeeController;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class FieldVisitController extends Controller
 {
@@ -112,7 +113,7 @@ class FieldVisitController extends Controller
             ->join('distributor_master', 'distributor_master.id', '=', 'employee_beat_outlet_map.distributor_id')
             ->select([
                 'employee_beat_outlet_map.employee_id',
-		'employee_beat_outlet_map.employee_name',
+                'employee_beat_outlet_map.employee_name',
                 'beat_master.id as beat_id',
                 'beat_master.beat_name',
                 'distributor_master.id as distributor_id',
@@ -406,7 +407,7 @@ class FieldVisitController extends Controller
             'store_grade' => 'nullable|in:A+,A,B+,B,C',
 
             // Sales
-            //'is_phone_order' => 'nullable|boolean',
+            'is_phone_order' => 'nullable|boolean',
             'leggings_qty'     => 'nullable|integer|min:0',
             'non_leggings_qty' => 'nullable|integer|min:0',
             'innerwear_qty'    => 'nullable|integer|min:0',
@@ -419,7 +420,7 @@ class FieldVisitController extends Controller
             'longitude'  => 'nullable|numeric',
             'address'    => 'nullable|string',
             'location_accuracy' => 'nullable|integer',
-           // 'selfie_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'selfie_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
         // Upload FSU image
@@ -444,7 +445,7 @@ class FieldVisitController extends Controller
             ($validated['leggings_qty'] ?? 0) +
             ($validated['non_leggings_qty'] ?? 0) +
             ($validated['innerwear_qty'] ?? 0);
-       // $validated['is_phone_order'] = $request->is_phone_order ?? 0;
+        $validated['is_phone_order'] = $request->is_phone_order ?? 0;
         $validated['remark'] = $request->remark ?? [];
         $validated['competitor_brands'] = $request->competitor_brands ?? [];
 
@@ -453,15 +454,15 @@ class FieldVisitController extends Controller
         $validated['created_at'] = $request->visited_at;
 
         $entry = FieldVisitEntry::create($validated);
-        // if ($request->hasFile('selfie_image')) {
-        //     $path = $request->file('selfie_image')
-        //         ->store('visit_selfies', 'public');
+        if ($request->hasFile('selfie_image')) {
+            $path = $request->file('selfie_image')
+                ->store('visit_selfies', 'public');
 
-        //     $entry->selfie()->create([
-        //         'image_path' => $path,
-        //         'image_url'  => Storage::url($path),
-        //     ]);
-        // }
+            $entry->selfie()->create([
+                'image_path' => $path,
+                'image_url'  => Storage::url($path),
+            ]);
+        }
         if ($request->expectsJson()) {
             return response()->json([
                 'status' => true,
@@ -715,7 +716,7 @@ class FieldVisitController extends Controller
         return response($pdf->Output($fileName, 'D'))
             ->header('Content-Type', 'application/pdf');
     }
-     // public function historyApi(Request $request)
+    // public function historyApi(Request $request)
     // {
     //     $empId = $request->emp_id;
     //     $date  = $request->date;
@@ -751,34 +752,49 @@ class FieldVisitController extends Controller
         $empId = $request->emp_id;
         $date  = $request->date;
 
-        $query = FieldVisitEntry::query()
-            ->where('field_visit_entries.emp_id', $empId)
+        // 🔹 Base query (NO joins for count)
+        $baseQuery = FieldVisitEntry::query()
+            ->where('emp_id', $empId);
+
+        if (!empty($date)) {
+            $baseQuery->whereDate('visited_at', $date);
+        }
+
+        // ✅ If only count is requested → return fast
+        if ($request->only_count) {
+            return response()->json([
+                'status' => true,
+                'count'  => $baseQuery->count()
+            ]);
+        }
+
+        // 🔹 Full query WITH joins (only when needed)
+        $query = $baseQuery
             ->leftJoin('beat_master', 'beat_master.id', '=', 'field_visit_entries.beat_id')
             ->leftJoin('distributor_master', 'distributor_master.id', '=', 'field_visit_entries.distributor_id')
-            ->leftJoin('outlet_master', 'outlet_master.id', '=', 'field_visit_entries.outlet_id')
+            ->leftJoin('outlet_master', 'outlet_master.id', '=', 'field_visit_entries.outlet_id');
+
+        $visits = $query
             ->select(
                 'field_visit_entries.*',
                 'beat_master.beat_name',
                 'distributor_master.distributor_name',
                 'outlet_master.outlet_name'
-            );
-
-        if (!empty($date)) {
-            $query->whereDate('field_visit_entries.visited_at', $date);
-        }
-
-        $visits = $query
+            )
             ->orderBy('field_visit_entries.visited_at', 'desc')
             ->get();
+
         $cmInfo = DB::table('employee_beat_outlet_map')
             ->where('employee_id', $empId)
             ->select('cm_id', 'cm_name')
             ->first();
+
         return response()->json([
             'status' => true,
             'cm_id'   => $cmInfo->cm_id ?? null,
             'cm_name' => $cmInfo->cm_name ?? null,
-            'data' => $visits
+            'count'   => $visits->count(), // optional, keeps consistency
+            'data'    => $visits
         ]);
     }
     public function apiCreate()
@@ -874,7 +890,7 @@ class FieldVisitController extends Controller
     //         'teams'   => $teamEmployees
     //     ]);
     // }
-     public function adminVisitsByDate(Request $request, $empId)
+    public function adminVisitsByDate(Request $request, $empId)
     {
         $date = $request->date;
 
@@ -948,7 +964,7 @@ class FieldVisitController extends Controller
             'teams'  => $teamEmployees
         ]);
     }
-public function employeeVisitMap(Request $request, $empId)
+    public function employeeVisitMap(Request $request, $empId)
     {
         $date = $request->date;
 
@@ -973,7 +989,63 @@ public function employeeVisitMap(Request $request, $empId)
             'data' => $visits
         ]);
     }
- public function employeeVisitMapWeb(Request $request, $empId)
+    // public function employeeVisitMapWeb(Request $request, $empId)
+    // {
+    //     $date = $request->date;
+
+    //     $visits = FieldVisitEntry::select(
+    //         'field_visit_entries.*',
+    //         'outlet_master.outlet_name',
+    //         'employee_masters.emp_name'
+    //     )
+    //         ->leftJoin('outlet_master', 'outlet_master.id', '=', 'field_visit_entries.outlet_id')
+    //         ->leftJoin('employee_masters', 'employee_masters.emp_id', '=', 'field_visit_entries.emp_id')
+    //         ->where('field_visit_entries.emp_id', $empId)
+    //         ->whereDate('field_visit_entries.visited_date', $date)
+    //         ->orderBy('field_visit_entries.visited_at', 'asc')
+    //         ->get();
+
+    //     $totalDistance = 0;
+    //     $formatted = [];
+
+    //     foreach ($visits as $i => $v) {
+    //         $leggings    = (int)($v->leggings_qty ?? 0);
+    //         $nonLeggings = (int)($v->non_leggings_qty ?? 0);
+    //         $innerwear   = (int)($v->innerwear_qty ?? 0);
+    //         $pcs         = $leggings + $nonLeggings + $innerwear;
+
+    //         // Calculate distance from previous point
+    //         if ($i > 0) {
+    //             $prev = $formatted[$i - 1];
+    //             $totalDistance += $this->haversineDistance(
+    //                 $prev['lat'],
+    //                 $prev['lng'],
+    //                 (float)$v->latitude,
+    //                 (float)$v->longitude
+    //             );
+    //         }
+
+    //         $formatted[] = [
+    //             'lat'      => (float)$v->latitude,
+    //             'lng'      => (float)$v->longitude,
+    //             'name'     => $v->outlet_name ?? 'No Outlet',
+    //             'emp_name' => $v->emp_name ?? '',
+    //             'time'     => $v->visited_at,
+    //             'pcs'      => $pcs,
+    //             'leggings'    => $leggings,
+    //             'non_leggings' => $nonLeggings,
+    //             'innerwear'   => $innerwear,
+    //         ];
+    //     }
+
+    //     return response()->json([
+    //         'visits'       => $formatted,
+    //         'total_visits' => count($formatted),
+    //         'total_km'     => round($totalDistance, 2),
+    //         'total_pcs'    => array_sum(array_column($formatted, 'pcs'))
+    //     ]);
+    // }
+    public function employeeVisitMapWeb(Request $request, $empId)
     {
         $date = $request->date;
 
@@ -987,6 +1059,7 @@ public function employeeVisitMap(Request $request, $empId)
             ->where('field_visit_entries.emp_id', $empId)
             ->whereDate('field_visit_entries.visited_date', $date)
             ->orderBy('field_visit_entries.visited_at', 'asc')
+            ->with('selfie') // 👈 eager load selfie
             ->get();
 
         $totalDistance = 0;
@@ -998,7 +1071,6 @@ public function employeeVisitMap(Request $request, $empId)
             $innerwear   = (int)($v->innerwear_qty ?? 0);
             $pcs         = $leggings + $nonLeggings + $innerwear;
 
-            // Calculate distance from previous point
             if ($i > 0) {
                 $prev = $formatted[$i - 1];
                 $totalDistance += $this->haversineDistance(
@@ -1010,15 +1082,16 @@ public function employeeVisitMap(Request $request, $empId)
             }
 
             $formatted[] = [
-                'lat'      => (float)$v->latitude,
-                'lng'      => (float)$v->longitude,
-                'name'     => $v->outlet_name ?? 'No Outlet',
-                'emp_name' => $v->emp_name ?? '',
-                'time'     => $v->visited_at,
-                'pcs'      => $pcs,
-                'leggings'    => $leggings,
+                'lat'          => (float)$v->latitude,
+                'lng'          => (float)$v->longitude,
+                'name'         => $v->outlet_name ?? 'No Outlet',
+                'emp_name'     => $v->emp_name ?? '',
+                'time'         => $v->visited_at,
+                'pcs'          => $pcs,
+                'leggings'     => $leggings,
                 'non_leggings' => $nonLeggings,
-                'innerwear'   => $innerwear,
+                'innerwear'    => $innerwear,
+                'selfie_url'   => $v->selfie?->image_url ?? null, // 👈 add selfie URL
             ];
         }
 
@@ -1026,7 +1099,7 @@ public function employeeVisitMap(Request $request, $empId)
             'visits'       => $formatted,
             'total_visits' => count($formatted),
             'total_km'     => round($totalDistance, 2),
-            'total_pcs'    => array_sum(array_column($formatted, 'pcs'))
+            'total_pcs'    => array_sum(array_column($formatted, 'pcs')),
         ]);
     }
 
@@ -1041,7 +1114,7 @@ public function employeeVisitMap(Request $request, $empId)
             sin($dLng / 2) * sin($dLng / 2);
         return $R * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
- public function visitMapPage()
+    public function visitMapPage()
     {
         $employees = Employee::select('emp_id', 'emp_name')
             ->orderBy('emp_name')

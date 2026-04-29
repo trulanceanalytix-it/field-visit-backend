@@ -743,32 +743,49 @@
                         }) :
                         '';
 
-                    const popupContent = `
-                    <div style="font-family:Arial,sans-serif;min-width:200px">
-                        <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:#1e293b">${visit.name}</div>
-                        <div style="font-size:12px;color:#64748b;margin-bottom:4px"><i class="bi bi-clock"></i> ${timeStr}</div>
-                        <div style="font-size:12px;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
-                            <span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:10px;font-weight:600">
-                                L: ${visit.leggings ?? 0}
-                            </span>
-                            <span style="background:#dbeafe;color:#2563eb;padding:2px 8px;border-radius:10px;font-weight:600">
-                                NL: ${visit.non_leggings ?? 0}
-                            </span>
-                            <span style="background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:10px;font-weight:600">
-                                IW: ${visit.innerwear ?? 0}
-                            </span>
+                    const selfieHtml = visit.selfie_url ?
+                        `<div style="margin-top:8px">
+                        <img 
+                            src="${visit.selfie_url}" 
+                            alt="Store selfie"
+                            style="width:100%;border-radius:6px;cursor:pointer;max-height:140px;object-fit:cover"
+                            onclick="window.open('${visit.selfie_url}', '_blank')"
+                        />
+                        <div style="font-size:10px;color:#94a3b8;margin-top:3px;text-align:center">
+                            Tap to view full image
                         </div>
-                        <div style="margin-top:8px;font-size:13px;font-weight:700;color:#1e293b">
-                            Total PCS: ${visit.pcs}
-                        </div>
+                    </div>` :
+                        `<div style="margin-top:8px;font-size:11px;color:#94a3b8;text-align:center;padding:6px;background:#f8fafc;border-radius:6px">
+                        No selfie captured
                     </div>`;
+
+                    const popupContent = `
+                        <div style="font-family:Arial,sans-serif;min-width:200px">
+                            <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:#1e293b">${visit.name}</div>
+                            <div style="font-size:12px;color:#64748b;margin-bottom:4px"><i class="bi bi-clock"></i> ${timeStr}</div>
+                            <div style="font-size:12px;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
+                                <span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:10px;font-weight:600">
+                                    L: ${visit.leggings ?? 0}
+                                </span>
+                                <span style="background:#dbeafe;color:#2563eb;padding:2px 8px;border-radius:10px;font-weight:600">
+                                    NL: ${visit.non_leggings ?? 0}
+                                </span>
+                                <span style="background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:10px;font-weight:600">
+                                    IW: ${visit.innerwear ?? 0}
+                                </span>
+                            </div>
+                            <div style="margin-top:8px;font-size:13px;font-weight:700;color:#1e293b">
+                                Total PCS: ${visit.pcs}
+                            </div>
+                            ${selfieHtml}
+                        </div>`;
 
                     const marker = L.marker(pos, {
                             icon
                         })
                         .addTo(map)
                         .bindPopup(popupContent, {
-                            maxWidth: 250
+                            maxWidth: 260
                         });
 
                     markersLayer.push({

@@ -69,6 +69,7 @@
                         <th>IW_Stk</th>
                         <th>Total_Stk</th>
                         <th>Visited Date</th>
+                        <th>Time</th>
                         <th>Distributor</th>
                         <th>Beat Name</th>
                         <th>Outlet Name</th>
@@ -85,7 +86,12 @@
                         <th></th>
                         <th></th>
                         <th></th>
-                        <th><input type="date" id="filterDate" class="form-control form-control-sm"></th>
+                        <!-- Replace the date filter th -->
+                        <th>
+                            <input type="date" id="filterDateFrom" class="form-control form-control-sm mb-1" placeholder="From">
+                            <input type="date" id="filterDateTo" class="form-control form-control-sm" placeholder="To">
+                        </th>
+                        <th></th> <!-- Time filter (empty, no filter needed) -->
                         <th><input type="text" id="filterDistributor" class="form-control form-control-sm" placeholder="Distributor"></th>
                         <th><input type="text" id="filterBeat" class="form-control form-control-sm" placeholder="Beat Name"></th>
                         <th>
@@ -110,6 +116,7 @@
                         <td class="text-center">{{ $visit->stock_innerwear }}</td>
                         <td>{{ ($visit->stock_leggings ?? 0) + ($visit->stock_non_leggings ?? 0) + ($visit->stock_innerwear ?? 0) }}</td>
                         <td>{{ \Carbon\Carbon::parse($visit->visited_date)->format('d/m/y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($visit->visited_at)->format('h:i A') }}</td>
                         <td>{{ $visit->distributor->distributor_name ?? '' }}</td>
                         <td>{{ $visit->beat->beat_name ?? '' }}</td>
                         <td>{{ $visit->outlet->outlet_name ?? '' }}</td>
@@ -138,11 +145,30 @@
                     "orderable": true,
                     "targets": "_all"
                 }],
-
-                // ✅ Hide loader AFTER DataTable finishes drawing
                 "initComplete": function() {
                     document.getElementById('pageLoader').style.display = 'none';
                 }
+            });
+
+            // ── CUSTOM DATE RANGE FILTER ──
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                const fromVal = $('#filterDateFrom').val();
+                const toVal = $('#filterDateTo').val();
+
+                if (!fromVal && !toVal) return true;
+
+                // data[11] is Visited Date in format d/m/yy e.g. "29/04/26"
+                const parts = data[11].split('/');
+                if (parts.length !== 3) return true;
+
+                // Convert d/m/yy → Date (assume 20xx)
+                const rowDate = new Date(`20${parts[2]}-${parts[1]}-${parts[0]}`);
+                const from = fromVal ? new Date(fromVal) : null;
+                const to = toVal ? new Date(toVal) : null;
+
+                if (from && rowDate < from) return false;
+                if (to && rowDate > to) return false;
+                return true;
             });
 
             $('#visitTable_filter input').off().on('keypress', function(e) {
@@ -150,18 +176,11 @@
             });
 
             function applyFilters() {
-                const rawDate = $('#filterDate').val();
-                let formattedDate = '';
-                if (rawDate) {
-                    const parts = rawDate.split('-');
-                    formattedDate = parts[2] + '/' + parts[1] + '/' + parts[0].slice(2);
-                }
                 table.column(1).search($('#filterEmpId').val());
                 table.column(2).search($('#filterEmpName').val());
-                table.column(11).search(formattedDate);
-                table.column(12).search($('#filterDistributor').val());
-                table.column(13).search($('#filterBeat').val());
-                table.column(14).search($('#filterOutlet').val());
+                table.column(12).search($('#filterDistributor').val()); // shifted +1
+                table.column(13).search($('#filterBeat').val()); // shifted +1
+                table.column(14).search($('#filterOutlet').val()); // shifted +1
                 table.draw();
             }
 
@@ -192,7 +211,8 @@
                 distributor: document.getElementById('filterDistributor').value,
                 beat: document.getElementById('filterBeat').value,
                 outlet: document.getElementById('filterOutlet').value,
-                date: document.getElementById('filterDate').value,
+                date_from: document.getElementById('filterDateFrom').value, // changed
+                date_to: document.getElementById('filterDateTo').value, // changed
             });
 
             window.location.href = "{{ route('admin.daily-visits.export') }}?" + params.toString();
