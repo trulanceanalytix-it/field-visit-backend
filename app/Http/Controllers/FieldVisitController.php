@@ -23,6 +23,7 @@ use TCPDF;
 use app\Http\Controllers\EmployeeController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Models\FieldVisitSodLog;
 
 class FieldVisitController extends Controller
 {
@@ -989,6 +990,7 @@ class FieldVisitController extends Controller
             'data' => $visits
         ]);
     }
+    
     // public function employeeVisitMapWeb(Request $request, $empId)
     // {
     //     $date = $request->date;
@@ -1003,6 +1005,7 @@ class FieldVisitController extends Controller
     //         ->where('field_visit_entries.emp_id', $empId)
     //         ->whereDate('field_visit_entries.visited_date', $date)
     //         ->orderBy('field_visit_entries.visited_at', 'asc')
+    //         ->with('selfie') // 👈 eager load selfie
     //         ->get();
 
     //     $totalDistance = 0;
@@ -1014,7 +1017,6 @@ class FieldVisitController extends Controller
     //         $innerwear   = (int)($v->innerwear_qty ?? 0);
     //         $pcs         = $leggings + $nonLeggings + $innerwear;
 
-    //         // Calculate distance from previous point
     //         if ($i > 0) {
     //             $prev = $formatted[$i - 1];
     //             $totalDistance += $this->haversineDistance(
@@ -1026,15 +1028,16 @@ class FieldVisitController extends Controller
     //         }
 
     //         $formatted[] = [
-    //             'lat'      => (float)$v->latitude,
-    //             'lng'      => (float)$v->longitude,
-    //             'name'     => $v->outlet_name ?? 'No Outlet',
-    //             'emp_name' => $v->emp_name ?? '',
-    //             'time'     => $v->visited_at,
-    //             'pcs'      => $pcs,
-    //             'leggings'    => $leggings,
+    //             'lat'          => (float)$v->latitude,
+    //             'lng'          => (float)$v->longitude,
+    //             'name'         => $v->outlet_name ?? 'No Outlet',
+    //             'emp_name'     => $v->emp_name ?? '',
+    //             'time'         => $v->visited_at,
+    //             'pcs'          => $pcs,
+    //             'leggings'     => $leggings,
     //             'non_leggings' => $nonLeggings,
-    //             'innerwear'   => $innerwear,
+    //             'innerwear'    => $innerwear,
+    //             'selfie_url'   => $v->selfie?->image_url ?? null, // 👈 add selfie URL
     //         ];
     //     }
 
@@ -1042,7 +1045,7 @@ class FieldVisitController extends Controller
     //         'visits'       => $formatted,
     //         'total_visits' => count($formatted),
     //         'total_km'     => round($totalDistance, 2),
-    //         'total_pcs'    => array_sum(array_column($formatted, 'pcs'))
+    //         'total_pcs'    => array_sum(array_column($formatted, 'pcs')),
     //     ]);
     // }
     public function employeeVisitMapWeb(Request $request, $empId)
@@ -1064,15 +1067,38 @@ class FieldVisitController extends Controller
 
         $totalDistance = 0;
         $formatted = [];
+        $sod = FieldVisitSodLog::where('emp_id', $empId)
+            ->whereDate('sod_time', $date)
+            ->latest()
+            ->first();
+            if ($sod) {
 
+            $formatted[] = [
+                'lat'          => (float)$sod->latitude,
+                'lng'          => (float)$sod->longitude,
+                'name'         => 'SOD START',
+                'emp_name'     => $sod->emp_name ?? '',
+                'time'         => $sod->sod_time,
+                'pcs'          => 0,
+                'leggings'     => 0,
+                'non_leggings' => 0,
+                'innerwear'    => 0,
+                'selfie_url'   => $sod->selfie_image
+                    ? asset('storage/' . $sod->selfie_image)
+                    : null,
+
+                // 👇 optional
+                'is_sod'       => true,
+            ];
+        }
         foreach ($visits as $i => $v) {
             $leggings    = (int)($v->leggings_qty ?? 0);
             $nonLeggings = (int)($v->non_leggings_qty ?? 0);
             $innerwear   = (int)($v->innerwear_qty ?? 0);
             $pcs         = $leggings + $nonLeggings + $innerwear;
 
-            if ($i > 0) {
-                $prev = $formatted[$i - 1];
+            if (count($formatted) > 0) {
+                $prev = end($formatted);
                 $totalDistance += $this->haversineDistance(
                     $prev['lat'],
                     $prev['lng'],

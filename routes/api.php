@@ -7,16 +7,17 @@ use App\Http\Controllers\OutletController;
 use App\Http\Controllers\Api\CompetitorBrandController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AppController;
+use App\Http\Controllers\Api\FieldVisitSodController;
 
 
 Route::post('/login', [AuthController::class, 'login']);
 
-// PUBLIC — no token
+// PUBLIC ï¿½ no token
 Route::get('/employee/name/{emp_id}', [AuthController::class, 'employeeName']);
 Route::get('/app-version', [AppController::class, 'version']);
 
 
-// PROTECTED — token required
+// PROTECTED ï¿½ token required
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/field-visit/history', [FieldVisitController::class, 'historyApi']);
 	Route::get('/outlet/history', [FieldVisitController::class, 'outletHistory']);
@@ -33,4 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/employee-visit-map/{empId}', [FieldVisitController::class, 'employeeVisitMap']);
     Route::get('/admin/dashboard/{empId}', [AdminDashboardController::class, 'dashboard']);
     Route::get('/admin/employee-beats/{empId}', [AdminDashboardController::class, 'employeeBeats']);
+    Route::post('/field-visit/sod', [FieldVisitSodController::class, 'store']);
+    Route::get(
+    '/field-visit/check-sod',
+    [FieldVisitSodController::class, 'checkSod']
+);
 });
