@@ -81,14 +81,17 @@ class FieldVisitEntry extends Model
 
         'visited_at',
         'visited_date',
+        'check_in_time',
+        'check_out_time',
+        'visit_duration_seconds',
     ];
 
     protected $casts = [
-        'remark'             => 'array',
-        'competitor_brands'  => 'array',
+        'remark' => 'array',
+        'competitor_brands' => 'array',
         'instore_branding' => 'array',
-        'visited_at'         => 'datetime',
-        'visited_date'       => 'date',
+        'visited_at' => 'datetime',
+        'visited_date' => 'date',
     ];
     protected static function boot()
     {
@@ -121,5 +124,16 @@ class FieldVisitEntry extends Model
     public function selfie()
     {
         return $this->hasOne(VisitSelfie::class);
+    }
+    // Auto-format duration as "5m 30s" anywhere you use the model
+    public function getVisitDurationFormattedAttribute(): string
+    {
+        if (!$this->visit_duration_seconds)
+            return '--';
+
+        $minutes = intdiv($this->visit_duration_seconds, 60);
+        $seconds = $this->visit_duration_seconds % 60;
+
+        return $minutes > 0 ? "{$minutes}m {$seconds}s" : "{$seconds}s";
     }
 }

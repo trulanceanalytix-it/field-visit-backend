@@ -422,6 +422,10 @@ class FieldVisitController extends Controller
             'address'    => 'nullable|string',
             'location_accuracy' => 'nullable|integer',
             'selfie_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+
+            'check_in_time' => 'nullable|date',
+            'check_out_time' => 'nullable|date',
+            'time_spent_seconds' => 'nullable|integer|min:0',
         ]);
 
         // Upload FSU image
@@ -453,6 +457,9 @@ class FieldVisitController extends Controller
         // Datetime values
         $validated['location_captured_at'] = $request->location_captured_at;
         $validated['created_at'] = $request->visited_at;
+        $validated['check_in_time'] = $request->check_in_time;
+        $validated['check_out_time'] = $request->check_out_time;
+        $validated['visit_duration_seconds'] = $request->time_spent_seconds;
 
         $entry = FieldVisitEntry::create($validated);
         if ($request->hasFile('selfie_image')) {
