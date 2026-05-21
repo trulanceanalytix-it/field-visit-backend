@@ -425,7 +425,7 @@ class FieldVisitController extends Controller
 
             'check_in_time' => 'nullable|date',
             'check_out_time' => 'nullable|date',
-            'time_spent_seconds' => 'nullable|integer|min:0',
+            'duration_seconds' => 'nullable|integer|min:0',
         ]);
 
         // Upload FSU image
@@ -459,7 +459,7 @@ class FieldVisitController extends Controller
         $validated['created_at'] = $request->visited_at;
         $validated['check_in_time'] = $request->check_in_time;
         $validated['check_out_time'] = $request->check_out_time;
-        $validated['visit_duration_seconds'] = $request->time_spent_seconds;
+        $validated['visit_duration_seconds'] = $request->duration_seconds;
 
         $entry = FieldVisitEntry::create($validated);
         if ($request->hasFile('selfie_image')) {

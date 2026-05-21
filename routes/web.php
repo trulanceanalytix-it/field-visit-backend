@@ -114,7 +114,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         [EmployeeBeatOutletMapController::class, 'data']
     )->name('employee-maps.data');
 
-	Route::get('/admin/daily-visits/export', [DailyVisitController::class, 'export'])
+    Route::get('/admin/daily-visits/export', [DailyVisitController::class, 'export'])
         ->name('daily-visits.export');
 
     // CRUD routes with route names like admin.distributors.index
@@ -124,9 +124,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('employees', EmployeeController::class);
     Route::resource('employee-maps', EmployeeBeatOutletMapController::class);
     Route::resource('daily-visits', DailyVisitController::class);
-Route::post('daily-visit/send-report', [DailyVisitController::class, 'sendReport'])
+    // ✅ Add this datatable route
+    Route::get('daily-visits-data', [DailyVisitController::class, 'datatable'])
+        ->name('daily-visits.datatable');
+    Route::post('daily-visit/send-report', [DailyVisitController::class, 'sendReport'])
         ->name('daily-visit.send-report');
-Route::get('/visit-map', [FieldVisitController::class, 'visitMapPage'])
+    Route::get('/visit-map', [FieldVisitController::class, 'visitMapPage'])
         ->name('visit-map.page');
     Route::get('/employee-visit-map-web/{empId}', [FieldVisitController::class, 'employeeVisitMapWeb']);
 });

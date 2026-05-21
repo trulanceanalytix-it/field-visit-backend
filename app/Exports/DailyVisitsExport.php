@@ -36,35 +36,74 @@ class DailyVisitsExport implements
     public function collection()
     {
         return FieldVisitEntry::with(['distributor', 'beat', 'outlet'])
+
             ->when(!empty($this->filters['emp_id']), function ($q) {
-                $q->where('emp_id', 'like', '%' . $this->filters['emp_id'] . '%');
+                $q->where(
+                    'emp_id',
+                    'ilike',
+                    '%' . trim($this->filters['emp_id']) . '%'
+                );
             })
+
             ->when(!empty($this->filters['emp_name']), function ($q) {
-                $q->where('emp_name', 'like', '%' . $this->filters['emp_name'] . '%');
+                $q->where(
+                    'emp_name',
+                    'ilike',
+                    '%' . trim($this->filters['emp_name']) . '%'
+                );
             })
-            ->when(!empty($this->filters['date']), function ($q) {
-                // ✅ Only this line changed: visited_at → visited_date (matches your index filter)
-                $q->whereDate('visited_date', $this->filters['date']);
+
+            ->when(!empty($this->filters['date_from']), function ($q) {
+                $q->whereDate(
+                    'visited_date',
+                    '>=',
+                    $this->filters['date_from']
+                );
             })
+
+            ->when(!empty($this->filters['date_to']), function ($q) {
+                $q->whereDate(
+                    'visited_date',
+                    '<=',
+                    $this->filters['date_to']
+                );
+            })
+
             ->when(!empty($this->filters['distributor']), function ($q) {
                 $q->whereHas('distributor', function ($dq) {
-                    $dq->where('distributor_name', 'like', '%' . $this->filters['distributor'] . '%');
+                    $dq->where(
+                        'distributor_name',
+                        'ilike',
+                        '%' . trim($this->filters['distributor']) . '%'
+                    );
                 });
             })
+
             ->when(!empty($this->filters['beat']), function ($q) {
                 $q->whereHas('beat', function ($bq) {
-                    $bq->where('beat_name', 'like', '%' . $this->filters['beat'] . '%');
+                    $bq->where(
+                        'beat_name',
+                        'ilike',
+                        '%' . trim($this->filters['beat']) . '%'
+                    );
                 });
             })
+
             ->when(!empty($this->filters['outlet']), function ($q) {
                 $q->whereHas('outlet', function ($oq) {
-                    $oq->where('outlet_name', 'like', '%' . $this->filters['outlet'] . '%');
+                    $oq->where(
+                        'outlet_name',
+                        'ilike',
+                        '%' . trim($this->filters['outlet']) . '%'
+                    );
                 });
             })
+
+            ->orderBy('visited_date', 'desc')
             ->orderBy('visited_at', 'desc')
+
             ->get();
     }
-
     public function headings(): array
     {
         return [
@@ -103,8 +142,8 @@ class DailyVisitsExport implements
 
         return [
             $visit->visited_at
-                ? Date::dateTimeToExcel($visit->visited_at)
-                : null,
+            ? Date::dateTimeToExcel($visit->visited_at)
+            : null,
 
             $visit->emp_id,
             $visit->emp_name,
