@@ -439,16 +439,12 @@
 
         <!-- Employee Autocomplete -->
         <div style="position:relative">
-            <div style="display:flex;align-items:center;background:#0f172a;border:1px solid #334155;border-radius:8px;overflow:visible">
+            <div
+                style="display:flex;align-items:center;background:#0f172a;border:1px solid #334155;border-radius:8px;overflow:visible">
                 <i class="bi bi-person" style="color:#94a3b8;padding:0 8px;font-size:14px"></i>
-                <input
-                    type="text"
-                    id="empSearch"
-                    placeholder="Type employee name..."
-                    autocomplete="off"
+                <input type="text" id="empSearch" placeholder="Type employee name..." autocomplete="off"
                     style="width:200px;background:transparent;border:none;padding:7px 8px 7px 0;color:#e2e8f0;font-size:13px;outline:none"
-                    oninput="searchEmployees(this.value)"
-                    onkeydown="handleKey(event)"
+                    oninput="searchEmployees(this.value)" onkeydown="handleKey(event)"
                     onfocus="searchEmployees(this.value)" />
                 <!-- Hidden field stores actual emp_id -->
                 <input type="hidden" id="empId">
@@ -483,15 +479,12 @@
         background:#334155;color:#e2e8f0;
         border-radius:8px;cursor:pointer;
         display:flex;align-items:center;justify-content:center;
-        font-size:16px;transition:background 0.2s"
-                onmouseover="this.style.background='#475569'"
+        font-size:16px;transition:background 0.2s" onmouseover="this.style.background='#475569'"
                 onmouseout="this.style.background='#334155'">
                 ‹
             </button>
 
-            <input type="date" id="date"
-                onkeydown="handleDateKey(event)"
-                style="
+            <input type="date" id="date" onkeydown="handleDateKey(event)" style="
             width:150px;padding:7px 10px;
             border:1px solid #334155;
             border-radius:8px;
@@ -508,8 +501,7 @@
         background:#334155;color:#e2e8f0;
         border-radius:8px;cursor:pointer;
         display:flex;align-items:center;justify-content:center;
-        font-size:16px;transition:background 0.2s"
-                onmouseover="this.style.background='#475569'"
+        font-size:16px;transition:background 0.2s" onmouseover="this.style.background='#475569'"
                 onmouseout="this.style.background='#334155'">
                 ›
             </button>
@@ -742,7 +734,9 @@
                             hour12: true
                         }) :
                         '';
-
+                    const checkInStr = formatTime(visit.check_in_time);
+                    const checkOutStr = formatTime(visit.check_out_time);
+                    const duration = formatDuration(visit.visit_duration_seconds);
                     const selfieHtml = visit.selfie_url ?
                         `<div style="margin-top:8px">
                         <img 
@@ -763,6 +757,25 @@
                         <div style="font-family:Arial,sans-serif;min-width:200px">
                             <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:#1e293b">${visit.name}</div>
                             <div style="font-size:12px;color:#64748b;margin-bottom:4px"><i class="bi bi-clock"></i> ${timeStr}</div>
+                            
+                            ${(visit.check_in_time || visit.check_out_time || visit.visit_duration_seconds) ? `
+                            <div style="margin-top:6px;background:#f8fafc;border-radius:8px;padding:8px;font-size:12px">
+                                ${visit.check_in_time ? `
+                                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                                    <span style="color:#16a34a;font-weight:600"><i class="bi bi-box-arrow-in-right"></i> In</span>
+                                    <span>${checkInStr}</span>
+                                </div>` : ''}
+                                ${visit.check_out_time ? `
+                                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                                    <span style="color:#dc2626;font-weight:600"><i class="bi bi-box-arrow-right"></i> Out</span>
+                                    <span>${checkOutStr}</span>
+                                </div>` : ''}
+                                ${visit.visit_duration_seconds ? `
+                                <div style="display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:4px">
+                                    <span style="color:#7c3aed;font-weight:600"><i class="bi bi-stopwatch"></i> Duration</span>
+                                    <span style="font-weight:700">${duration}</span>
+                                </div>` : ''}
+                            </div>` : ''}
                             <div style="font-size:12px;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
                                 <span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:10px;font-weight:600">
                                     L: ${visit.leggings ?? 0}
@@ -781,8 +794,8 @@
                         </div>`;
 
                     const marker = L.marker(pos, {
-                            icon
-                        })
+                        icon
+                    })
                         .addTo(map)
                         .bindPopup(popupContent, {
                             maxWidth: 260
@@ -898,6 +911,14 @@
                     <div class="t-outlet" title="${visit.name}">${visit.name}</div>
                 </div>
                 <div class="t-time"><i class="bi bi-clock"></i> ${timeStr}</div>
+                ${(visit.check_in_time || visit.check_out_time || visit.visit_duration_seconds) ? `
+                <div class="t-time" style="color:#7c3aed;font-size:11px">
+                    <i class="bi bi-stopwatch"></i>
+                    ${visit.check_in_time ? formatTime(visit.check_in_time) : ''}
+                    ${visit.check_in_time && visit.check_out_time ? '→' : ''}
+                    ${visit.check_out_time ? formatTime(visit.check_out_time) : ''}
+                    ${visit.visit_duration_seconds ? `(${formatDuration(visit.visit_duration_seconds)})` : ''}
+                </div>` : ''}
                 ${visit.pcs > 0 ? `<div class="t-pcs"><i class="bi bi-box"></i> PCS: ${visit.pcs} (L:${visit.leggings ?? 0} NL:${visit.non_leggings ?? 0} IW:${visit.innerwear ?? 0})</div>` : '<div class="t-pcs" style="color:#dc2626"><i class="bi bi-x-circle"></i> No order</div>'}
             `;
 
@@ -924,7 +945,7 @@
                     const t2 = new Date(next.time);
                     const mins = Math.round((t2 - t1) / 60000);
                     const timeLabel = mins >= 60 ?
-                        `${Math.floor(mins/60)}h ${mins%60}m` :
+                        `${Math.floor(mins / 60)}h ${mins % 60}m` :
                         `${mins}m`;
 
                     const connector = document.createElement('div');
@@ -944,7 +965,19 @@
                 Math.sin(dLng / 2) ** 2;
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
+        function formatDuration(seconds) {
+            if (!seconds || seconds <= 0) return null;
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}M`;
+        }
 
+        function formatTime(dt) {
+            if (!dt) return 'N/A';
+            return new Date(dt).toLocaleTimeString('en-IN', {
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+        }
         // ── HELPERS ──
         function clearMap() {
             markersLayer.forEach(m => map.removeLayer(m.marker));
@@ -1052,7 +1085,7 @@
 
                 return `
             <div class="emp-option" data-index="${i}"
-                onmousedown="selectEmployee('${emp.emp_id}', '${emp.emp_name.replace(/'/g,"\\'")}', ${i})"
+                onmousedown="selectEmployee('${emp.emp_id}', '${emp.emp_name.replace(/'/g, "\\'")}', ${i})"
                 onmouseover="highlightItem(${i})"
                 style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;
                        display:flex;align-items:center;gap:10px;user-select:none;-webkit-user-select:none">

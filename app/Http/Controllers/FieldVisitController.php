@@ -24,6 +24,8 @@ use app\Http\Controllers\EmployeeController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\FieldVisitSodLog;
+use Illuminate\Support\Facades\Log;
+
 
 class FieldVisitController extends Controller
 {
@@ -152,12 +154,12 @@ class FieldVisitController extends Controller
         // dd($request->all());
 
         $data = $request->validate([
-            'emp_id'    => 'required',
-            'emp_name'  => 'required|string',
+            'emp_id' => 'required',
+            'emp_name' => 'required|string',
 
             'distributor_id' => 'required|exists:distributor_master,id',
-            'beat_id'        => 'required|exists:beat_master,id',
-            'outlet_id'      => 'required|exists:outlet_master,id',
+            'beat_id' => 'required|exists:beat_master,id',
+            'outlet_id' => 'required|exists:outlet_master,id',
 
             'visited_date' => 'required|date',
 
@@ -171,7 +173,7 @@ class FieldVisitController extends Controller
 
             // Instore branding
             'instore_branding' => 'nullable|in:Yes,No',
-            'branding_image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'branding_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
 
             // Competitor brands
             'competitor_brands' => 'nullable|array',
@@ -181,19 +183,19 @@ class FieldVisitController extends Controller
             // Store grade
             'store_grade' => 'nullable|in:A+,A,B+,B,C',
 
-            'leggings_qty'     => 'nullable|integer|min:0',
+            'leggings_qty' => 'nullable|integer|min:0',
             'non_leggings_qty' => 'nullable|integer|min:0',
-            'innerwear_qty'    => 'nullable|integer|min:0',
-            'total_sales_qty'  => 'nullable|integer|min:0',
+            'innerwear_qty' => 'nullable|integer|min:0',
+            'total_sales_qty' => 'nullable|integer|min:0',
 
             'remarks' => 'nullable|array',
             'remarks.*' => 'integer|exists:remarks,id',
 
             'observation' => 'nullable|string',
 
-            'latitude'   => 'nullable|numeric',
-            'longitude'  => 'nullable|numeric',
-            'address'    => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'address' => 'nullable|string',
             'location_accuracy' => 'nullable|integer',
         ]);
 
@@ -375,33 +377,33 @@ class FieldVisitController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'emp_id'    => 'required|exists:employee_masters,emp_id',
-            'emp_name'  => 'required|string',
+            'emp_id' => 'required|exists:employee_masters,emp_id',
+            'emp_name' => 'required|string',
 
             'distributor_id' => 'required|exists:distributor_master,id',
-            'beat_id'        => 'required|exists:beat_master,id',
-            'outlet_id'      => 'required|exists:outlet_master,id',
+            'beat_id' => 'required|exists:beat_master,id',
+            'outlet_id' => 'required|exists:outlet_master,id',
 
             'visited_date' => 'required|date',
-            'visited_at'   => 'required|date',
+            'visited_at' => 'required|date',
 
             // ?? STOCK
-            'stock_leggings'      => 'nullable|integer|min:0',
-            'stock_non_leggings'  => 'nullable|integer|min:0',
-            'stock_innerwear'     => 'nullable|integer|min:0',
+            'stock_leggings' => 'nullable|integer|min:0',
+            'stock_non_leggings' => 'nullable|integer|min:0',
+            'stock_innerwear' => 'nullable|integer|min:0',
 
             // FSU
             'fsu_type_1' => 'nullable|digits:1',
             'fsu_type_2' => 'nullable|digits:1',
             'fsu_type_3' => 'nullable|digits:1',
-            'fsu_image'  => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx|max:5120',
+            'fsu_image' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx|max:5120',
 
             // Instore branding
             'instore_branding' => 'nullable|array',
-            'branding_image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'branding_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
 
             // Competitor brands
-            'competitor_brands'   => 'nullable|array',
+            'competitor_brands' => 'nullable|array',
             'competitor_brands.*' => 'numeric|exists:competitor_brands,id',
 
             // Store grade
@@ -409,17 +411,17 @@ class FieldVisitController extends Controller
 
             // Sales
             'is_phone_order' => 'nullable|boolean',
-            'leggings_qty'     => 'nullable|integer|min:0',
+            'leggings_qty' => 'nullable|integer|min:0',
             'non_leggings_qty' => 'nullable|integer|min:0',
-            'innerwear_qty'    => 'nullable|integer|min:0',
+            'innerwear_qty' => 'nullable|integer|min:0',
 
-            'remark'   => 'nullable|array',
+            'remark' => 'nullable|array',
             'remark.*' => 'numeric|exists:remarks,id',
             'observation' => 'nullable|string',
 
-            'latitude'   => 'nullable|numeric',
-            'longitude'  => 'nullable|numeric',
-            'address'    => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'address' => 'nullable|string',
             'location_accuracy' => 'nullable|integer',
             'selfie_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
 
@@ -468,14 +470,14 @@ class FieldVisitController extends Controller
 
             $entry->selfie()->create([
                 'image_path' => $path,
-                'image_url'  => Storage::url($path),
+                'image_url' => Storage::url($path),
             ]);
         }
         if ($request->expectsJson()) {
             return response()->json([
                 'status' => true,
                 'message' => 'Field visit saved successfully',
-                'data'    => $entry->load('selfie'),
+                'data' => $entry->load('selfie'),
             ], 201);
         }
 
@@ -610,7 +612,7 @@ class FieldVisitController extends Controller
 
         return response()->json([
             'last_visit' => optional($records->first())->visited_date,
-            'records'    => $records
+            'records' => $records
         ]);
     }
 
@@ -635,8 +637,8 @@ class FieldVisitController extends Controller
 
         /* ---------- File Name ---------- */
         $employeeName = preg_replace('/[^A-Za-z0-9_-]/', '_', $data['emp_name'] ?? 'employee');
-        $outletName   = preg_replace('/[^A-Za-z0-9_-]/', '_', $data['outlet_name'] ?? 'outlet');
-        $fileName     = $employeeName . '_' . $outletName . '.pdf';
+        $outletName = preg_replace('/[^A-Za-z0-9_-]/', '_', $data['outlet_name'] ?? 'outlet');
+        $fileName = $employeeName . '_' . $outletName . '.pdf';
 
         /* ---------- Remarks ---------- */
         $remarksMaster = Remark::pluck('remark', 'id');
@@ -758,7 +760,7 @@ class FieldVisitController extends Controller
     public function historyApi(Request $request)
     {
         $empId = $request->emp_id;
-        $date  = $request->date;
+        $date = $request->date;
 
         // 🔹 Base query (NO joins for count)
         $baseQuery = FieldVisitEntry::query()
@@ -772,7 +774,7 @@ class FieldVisitController extends Controller
         if ($request->only_count) {
             return response()->json([
                 'status' => true,
-                'count'  => $baseQuery->count()
+                'count' => $baseQuery->count()
             ]);
         }
 
@@ -799,10 +801,10 @@ class FieldVisitController extends Controller
 
         return response()->json([
             'status' => true,
-            'cm_id'   => $cmInfo->cm_id ?? null,
+            'cm_id' => $cmInfo->cm_id ?? null,
             'cm_name' => $cmInfo->cm_name ?? null,
-            'count'   => $visits->count(), // optional, keeps consistency
-            'data'    => $visits
+            'count' => $visits->count(), // optional, keeps consistency
+            'data' => $visits
         ]);
     }
     public function apiCreate()
@@ -924,11 +926,11 @@ class FieldVisitController extends Controller
             $query->whereIn('field_visit_entries.emp_id', $teamEmpIds);
 
             $employees = Employee::whereIn('emp_id', $teamEmpIds)
-                ->select('emp_id', 'emp_name')
+                ->select('emp_id', 'emp_name', 'assigned_region')
                 ->get();
         } else {
 
-            $employees = Employee::select('emp_id', 'emp_name')->get();
+            $employees = Employee::select('emp_id', 'emp_name', 'assigned_region')->get();
         }
 
         $teamEmployees = $employees->map(function ($emp) {
@@ -945,7 +947,8 @@ class FieldVisitController extends Controller
                 'emp_id' => $emp->emp_id,
                 'emp_name' => $emp->emp_name,
                 'beats_count' => $beatsCount,
-                'outlets_count' => $outletsCount
+                'outlets_count' => $outletsCount,
+                'assigned_region' => $emp->assigned_region
             ];
         });
 
@@ -968,8 +971,8 @@ class FieldVisitController extends Controller
 
         return response()->json([
             'status' => true,
-            'data'   => $visits,
-            'teams'  => $teamEmployees
+            'data' => $visits,
+            'teams' => $teamEmployees
         ]);
     }
     public function employeeVisitMap(Request $request, $empId)
@@ -997,7 +1000,8 @@ class FieldVisitController extends Controller
             'data' => $visits
         ]);
     }
-    
+
+
     // public function employeeVisitMapWeb(Request $request, $empId)
     // {
     //     $date = $request->date;
@@ -1078,61 +1082,63 @@ class FieldVisitController extends Controller
             ->whereDate('sod_time', $date)
             ->latest()
             ->first();
-            if ($sod) {
+        if ($sod) {
 
             $formatted[] = [
-                'lat'          => (float)$sod->latitude,
-                'lng'          => (float)$sod->longitude,
-                'name'         => 'SOD START',
-                'emp_name'     => $sod->emp_name ?? '',
-                'time'         => $sod->sod_time,
-                'pcs'          => 0,
-                'leggings'     => 0,
+                'lat' => (float) $sod->latitude,
+                'lng' => (float) $sod->longitude,
+                'name' => 'SOD START',
+                'emp_name' => $sod->emp_name ?? '',
+                'time' => $sod->sod_time,
+                'pcs' => 0,
+                'leggings' => 0,
                 'non_leggings' => 0,
-                'innerwear'    => 0,
-                'selfie_url'   => $sod->selfie_image
+                'innerwear' => 0,
+                'selfie_url' => $sod->selfie_image
                     ? asset('storage/' . $sod->selfie_image)
                     : null,
-
                 // 👇 optional
-                'is_sod'       => true,
+                'is_sod' => true,
             ];
         }
         foreach ($visits as $i => $v) {
-            $leggings    = (int)($v->leggings_qty ?? 0);
-            $nonLeggings = (int)($v->non_leggings_qty ?? 0);
-            $innerwear   = (int)($v->innerwear_qty ?? 0);
-            $pcs         = $leggings + $nonLeggings + $innerwear;
+            $leggings = (int) ($v->leggings_qty ?? 0);
+            $nonLeggings = (int) ($v->non_leggings_qty ?? 0);
+            $innerwear = (int) ($v->innerwear_qty ?? 0);
+            $pcs = $leggings + $nonLeggings + $innerwear;
 
             if (count($formatted) > 0) {
                 $prev = end($formatted);
                 $totalDistance += $this->haversineDistance(
                     $prev['lat'],
                     $prev['lng'],
-                    (float)$v->latitude,
-                    (float)$v->longitude
+                    (float) $v->latitude,
+                    (float) $v->longitude
                 );
             }
 
             $formatted[] = [
-                'lat'          => (float)$v->latitude,
-                'lng'          => (float)$v->longitude,
-                'name'         => $v->outlet_name ?? 'No Outlet',
-                'emp_name'     => $v->emp_name ?? '',
-                'time'         => $v->visited_at,
-                'pcs'          => $pcs,
-                'leggings'     => $leggings,
+                'lat' => (float) $v->latitude,
+                'lng' => (float) $v->longitude,
+                'name' => $v->outlet_name ?? 'No Outlet',
+                'emp_name' => $v->emp_name ?? '',
+                'time' => $v->visited_at,
+                'pcs' => $pcs,
+                'leggings' => $leggings,
                 'non_leggings' => $nonLeggings,
-                'innerwear'    => $innerwear,
-                'selfie_url'   => $v->selfie?->image_url ?? null, // 👈 add selfie URL
+                'innerwear' => $innerwear,
+                'selfie_url' => $v->selfie?->image_url ?? null,
+                'check_in_time' => $v->check_in_time,
+                'check_out_time' => $v->check_out_time,
+                'visit_duration_seconds' => (int) ($v->visit_duration_seconds ?? 0),
             ];
         }
 
         return response()->json([
-            'visits'       => $formatted,
+            'visits' => $formatted,
             'total_visits' => count($formatted),
-            'total_km'     => round($totalDistance, 2),
-            'total_pcs'    => array_sum(array_column($formatted, 'pcs')),
+            'total_km' => round($totalDistance, 2),
+            'total_pcs' => array_sum(array_column($formatted, 'pcs')),
         ]);
     }
 

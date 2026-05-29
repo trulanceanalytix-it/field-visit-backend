@@ -42,17 +42,15 @@ class AuthController extends Controller
         // revoke old tokens
         // $user->tokens()->delete();
         $reportingTo = trim(sprintf(
-            '%s - %s_%s_%s',
-            $user->mgr_level,
+            ' %s_%s',
             $user->reporting_mgr_name,
-            $user->reporting_mgr_id,
             $user->mgr_designation
         ));
 
         // ✅ Create token
         $token = $user->createToken('five-mobile');
         // ✅ Set expiry to today 11:00 PM
-        $token->accessToken->expires_at = Carbon::today()->setTime(23, 0, 0);
+        $token->accessToken->expires_at = Carbon::today()->setTime(23, 58, 0);
         $token->accessToken->save();
         return response()->json([
             'status' => true,
