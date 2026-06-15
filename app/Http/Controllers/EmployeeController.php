@@ -21,7 +21,8 @@ class EmployeeController extends Controller
             'emp_name',
             'emp_designation',
             'assigned_region',
-            'is_admin'
+            'is_admin',
+            'status'
         ]);
 
         return DataTables::of($query)
@@ -31,7 +32,7 @@ class EmployeeController extends Controller
                 return $row->is_admin ? 'YES' : 'NO';
             })
 
-            /* 🔍 COLUMN SEARCH */
+            /* COLUMN SEARCH */
             ->filterColumn('emp_id', function ($query, $keyword) {
                 $query->where('emp_id', 'ILIKE', "%{$keyword}%");
             })
@@ -48,13 +49,19 @@ class EmployeeController extends Controller
                 $query->where('assigned_region', 'ILIKE', "%{$keyword}%");
             })
 
+            ->filterColumn('status', function ($query, $keyword) {
+                if ($keyword !== '') {
+                    $query->where('status', $keyword);
+                }
+            })
+
             ->filterColumn('admin', function ($query, $keyword) {
                 if ($keyword !== '') {
                     $query->where('is_admin', $keyword);
                 }
             })
 
-            /* 🔍 GLOBAL SEARCH (keep this exactly as you have it) */
+            /* GLOBAL SEARCH */
             ->filter(function ($query) {
                 if (request()->filled('search.value')) {
                     $search = request('search.value');
@@ -64,6 +71,7 @@ class EmployeeController extends Controller
                             ->orWhere('emp_name', 'ILIKE', "%{$search}%")
                             ->orWhere('emp_designation', 'ILIKE', "%{$search}%")
                             ->orWhere('assigned_region', 'ILIKE', "%{$search}%")
+                            ->orWhere('status', 'ILIKE', "%{$search}%")
                             ->orWhereRaw(
                                 "CASE WHEN is_admin = true THEN 'YES' ELSE 'NO' END ILIKE ?",
                                 ["%{$search}%"]
@@ -81,7 +89,7 @@ class EmployeeController extends Controller
     }
 
 
-      public function store(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'emp_id'           => 'required|string|max:20|unique:employee_masters,emp_id',
@@ -90,6 +98,7 @@ class EmployeeController extends Controller
             'assigned_region'  => 'nullable|string|max:100',
             'is_admin'         => 'required|boolean',
             'password'         => 'required|string',
+            'status'           => 'required|string|in:ACTIVE,INACTIVE',
         ]);
 
         Employee::create([
@@ -98,14 +107,16 @@ class EmployeeController extends Controller
             'emp_designation' => $request->emp_designation,
             'assigned_region' => $request->assigned_region,
             'is_admin'        => $request->is_admin,
-            // optional default password if needed
-            'password' => bcrypt($request->password),
+            'status'          => $request->status,
+            'password'        => bcrypt($request->password),
         ]);
 
         return redirect()
             ->route('admin.employees.index')
             ->with('success', 'Employee added successfully');
-    }    public function update(Request $request, $emp_id)
+    }
+
+    public function update(Request $request, $emp_id)
     {
         $employee = Employee::where('emp_id', $emp_id)->firstOrFail();
 
@@ -115,7 +126,8 @@ class EmployeeController extends Controller
             'emp_designation' => 'nullable|string|max:100',
             'assigned_region' => 'nullable|string|max:100',
             'is_admin'        => 'required|boolean',
-            'password'        => 'nullable|string|min:6', // nullable � only update if provided
+            'password'        => 'nullable|string|min:6', // nullable - only update if provided
+            'status'          => 'required|string|in:ACTIVE,INACTIVE',
         ];
 
         $request->validate($rules);
@@ -126,6 +138,7 @@ class EmployeeController extends Controller
             'emp_designation' => $request->emp_designation,
             'assigned_region' => $request->assigned_region,
             'is_admin'        => $request->is_admin,
+            'status'          => $request->status,
         ];
 
         // Only update password if a new one was provided
@@ -139,11 +152,6 @@ class EmployeeController extends Controller
             ->route('admin.employees.index')
             ->with('success', 'Employee updated successfully');
     }
-    // public function edit($id)
-    // {
-    //     $employee = Employee::findOrFail($id);
-    //     return view('admin.employees.edit', compact('employee'));
-    // }
 
     public function destroy($id)
     {

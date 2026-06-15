@@ -21,12 +21,16 @@ class Employee extends Authenticatable
         'emp_designation',
         'assigned_region',
         'is_admin',
-        'password'
+        'password',
+        'status',
     ];
     protected $hidden = [
         'password',
     ];
     protected $casts = [
         'is_admin' => 'boolean',
+    ];
+    protected $attributes = [
+        'status' => 'ACTIVE',
     ];
 }

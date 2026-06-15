@@ -14,8 +14,14 @@ class AuthController extends Controller
 {
     public function employeeName($emp_id)
     {
+        $employee = Employee::where('emp_id', $emp_id)->first();
+        if ($employee && $employee->status === 'INACTIVE') {
+            return response()->json([
+                'name' => 'Employee ID deactivated'
+            ]);
+        }
         return response()->json([
-            'name' => Employee::where('emp_id', $emp_id)->value('emp_name')
+            'name' => $employee ? $employee->emp_name : null
         ]);
     }
 
@@ -25,6 +31,14 @@ class AuthController extends Controller
             'user_id' => 'required|digits:5',
             'password' => 'required'
         ]);
+
+        $user = Employee::where('emp_id', $request->user_id)->first();
+        if ($user && $user->status === 'INACTIVE') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Employee ID has been deactivated. Contact head office for further procedures.'
+            ], 403);
+        }
 
         if (!Auth::attempt([
             'emp_id' => $request->user_id,

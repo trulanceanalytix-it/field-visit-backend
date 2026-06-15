@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Employee;
 
 class LoginController extends Controller
 {
@@ -25,6 +26,13 @@ class LoginController extends Controller
             'user_id' => 'required',
             'password' => 'required',
         ]);
+
+        $user = Employee::where('emp_id', $request->user_id)->first();
+        if ($user && $user->status === 'INACTIVE') {
+            return back()->withErrors([
+                'user_id' => 'Employee ID has been deactivated. Contact head office for further procedures.',
+            ]);
+        }
 
         if (Auth::attempt([
             'emp_id' => $request->user_id,
