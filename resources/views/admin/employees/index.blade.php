@@ -19,6 +19,7 @@
 
         .card {
             border-radius: 12px;
+            overflow: hidden;
         }
 
         .modal-header {
@@ -73,9 +74,8 @@
         @endif
 
         <!-- Data Card -->
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
+        <div class="card shadow-sm p-3">
+            <div class="table-responsive">
                     <table class="table table-hover w-100" id="employeeTable">
                         <thead>
                             <tr>
@@ -117,7 +117,6 @@
                         </thead>
                     </table>
                 </div>
-            </div>
         </div>
 
         <!-- Add Employee Modal -->
