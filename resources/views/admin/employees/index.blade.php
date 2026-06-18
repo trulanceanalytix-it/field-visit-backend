@@ -1,21 +1,31 @@
-@extends('layouts.admin')
+<!DOCTYPE html>
+<html lang="en">
 
-@section('title', 'Employee Master')
-@section('page-title', 'Employee Master')
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Master</title>
+    @include('admin.partials.datatables')
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-@section('breadcrumb')
-    <li class="breadcrumb-item"><span class="mx-2 text-muted">/</span> <a
-            href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-    <li class="breadcrumb-item"><span class="mx-2 text-muted">/</span> <span class="text-dark">Employees</span></li>
-@endsection
-
-@push('styles')
-    <!-- DataTables Bootstrap 5 CSS -->
-    <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-
-
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <style>
+        body {
+            background: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .card {
+            border-radius: 12px;
+        }
+
+        .modal-header {
+            background-color: #0d6efd;
+            color: white;
+        }
+
         #employeeTable thead th {
             position: sticky;
             top: 0;
@@ -35,10 +45,13 @@
             }
         }
     </style>
-@endpush
+</head>
 
-@section('content')
-    <div class="container-fluid p-0">
+<body>
+
+    <div class="container py-5">
+        <h2 class="mb-4 text-center">Employee Master</h2>
+        <div class="container-fluid p-0">
 
         <!-- Compact Horizontal Action Toolbar -->
         <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mb-3">
@@ -275,9 +288,10 @@
         </div>
 
     </div>
-@endsection
+    </div>
 
-@push('scripts')
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @include('admin.partials.datatables-js')
 
     <script>
@@ -377,4 +391,5 @@
             btn.find('.spinner-border').removeClass('d-none');
         });
     </script>
-@endpush
+</body>
+</html>
