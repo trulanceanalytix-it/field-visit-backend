@@ -20,8 +20,8 @@ class OutletMaster extends Model
         'total_sft',
         'nearby_shops',
         'signage_image',
-        'image_1',
-        'image_2',
+        'visiting_card',
+        'shop_image',
         'status',
     ];
     public function beat()

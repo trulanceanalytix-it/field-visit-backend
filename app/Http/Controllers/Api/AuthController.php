@@ -79,4 +79,36 @@ class AuthController extends Controller
             ]
         ]);
     }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'emp_id' => 'required|digits:5',
+            'password' => 'required|string|min:6'
+        ]);
+
+        $employee = Employee::where('emp_id', $request->emp_id)->first();
+
+        if (!$employee) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Employee ID not found'
+            ], 404);
+        }
+
+        if ($employee->status === 'INACTIVE') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Employee ID has been deactivated. Contact head office.'
+            ], 403);
+        }
+
+        $employee->password = bcrypt($request->password);
+        $employee->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Password reset successfully'
+        ]);
+    }
 }

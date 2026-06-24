@@ -1137,8 +1137,8 @@
 
             // Images (ONLY via helper)
             setOutletImage('info_signage', selectedOutlet.signage_image);
-            setOutletImage('info_image1', selectedOutlet.image_1);
-            setOutletImage('info_image2', selectedOutlet.image_2);
+            setOutletImage('info_image1', selectedOutlet.visiting_card);
+            setOutletImage('info_image2', selectedOutlet.shop_image);
 
             // Text info
             document.getElementById('info_floors').textContent =

@@ -14,6 +14,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // PUBLIC � no token
 Route::get('/employee/name/{emp_id}', [AuthController::class, 'employeeName']);
+Route::post('/employee/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('/app-version', [AppController::class, 'version']);
 
 

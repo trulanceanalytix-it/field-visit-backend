@@ -218,6 +218,9 @@ class OutletController extends Controller
             'outlet_whatsapp' => 'nullable|string|max:15',
             'address'         => 'nullable|string',
             'gstin'           => 'nullable|string|max:15',
+            'signage'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'visiting_card'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'shop_image'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -240,6 +243,22 @@ class OutletController extends Controller
         DB::beginTransaction();
 
         try {
+            // Store uploaded images to outlet_images/ folder in public disk
+            $signagePath = null;
+            if ($request->hasFile('signage')) {
+                $signagePath = $request->file('signage')->store('outlet_images', 'public');
+            }
+
+            $visitingCardPath = null;
+            if ($request->hasFile('visiting_card')) {
+                $visitingCardPath = $request->file('visiting_card')->store('outlet_images', 'public');
+            }
+
+            $shopImagePath = null;
+            if ($request->hasFile('shop_image')) {
+                $shopImagePath = $request->file('shop_image')->store('outlet_images', 'public');
+            }
+
             // 1?? Create Outlet
             $outlet = OutletMaster::create([
                 'outlet_name'     => $request->outlet_name,
@@ -249,6 +268,9 @@ class OutletController extends Controller
                 'outlet_whatsapp' => $request->outlet_whatsapp,
                 'address'         => $request->address,
                 'gstin'           => $request->gstin,
+                'signage_image'   => $signagePath,
+                'visiting_card'   => $visitingCardPath,
+                'shop_image'      => $shopImagePath,
                 'status'          => 'ACTIVE',
             ]);
 

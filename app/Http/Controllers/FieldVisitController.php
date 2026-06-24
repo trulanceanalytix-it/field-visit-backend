@@ -129,8 +129,8 @@ class FieldVisitController extends Controller
                 'outlet_master.total_sft',
                 'outlet_master.nearby_shops',
                 'outlet_master.signage_image',
-                'outlet_master.image_1',
-                'outlet_master.image_2',
+                'outlet_master.visiting_card',
+                'outlet_master.shop_image',
             ])
             ->orderBy('beat_master.beat_name')
             ->get();
